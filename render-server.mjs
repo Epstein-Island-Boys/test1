@@ -30,25 +30,34 @@ function safePath(urlPath) {
   const pathname = decodeURIComponent(urlPath.split("?")[0] || "/");
   const relative = pathname.replace(/^\/+/, "");
   const candidate = path.resolve(publicRoot, relative);
-  if (candidate !== publicRoot && !candidate.startsWith(`${publicRoot}${path.sep}`)) {
+
+  if (
+    candidate !== publicRoot &&
+    !candidate.startsWith(`${publicRoot}${path.sep}`)
+  ) {
     return null;
   }
+
   return candidate;
 }
 
 async function sendFile(res, filePath) {
   const data = await fs.readFile(filePath);
   const ext = path.extname(filePath).toLowerCase();
+
   res.writeHead(200, {
     "Content-Type": contentTypes[ext] || "application/octet-stream",
-    "Cache-Control": ext === ".html" ? "no-cache" : "public, max-age=3600",
+    "Cache-Control":
+      ext === ".html" ? "no-cache" : "public, max-age=3600",
   });
+
   res.end(data);
 }
 
 const server = http.createServer(async (req, res) => {
   try {
     const target = safePath(req.url || "/");
+
     if (!target) {
       res.writeHead(400);
       res.end("Bad request");
@@ -57,13 +66,16 @@ const server = http.createServer(async (req, res) => {
 
     try {
       const stat = await fs.stat(target);
+
       if (stat.isFile()) {
         await sendFile(res, target);
         return;
       }
-    } catch {}
+    } catch {
+      // File doesn't exist; fall through to SPA fallback.
+    }
 
-    // SPA fallback for the demo UI.
+    // SPA fallback.
     await sendFile(res, path.join(publicRoot, "index.html"));
   } catch (error) {
     console.error(error);
@@ -77,11 +89,17 @@ server.on("upgrade", (req, socket, head) => {
     wisp.routeRequest(req, socket, head);
     return;
   }
+
   socket.destroy();
 });
 
 server.listen(port, "0.0.0.0", () => {
   console.log(`Scramjet listening on 0.0.0.0:${port}`);
-  console.log(`Demo: ${process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`}`);
+  console.log(
+    `Demo: ${
+      process.env.RENDER_EXTERNAL_URL ||
+      `http://localhost:${port}`
+    }`
+  );
   console.log("Wisp: /wisp/");
 });
