@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Render build: install workspace dependencies, build the WASM rewriter,
-# then build Scramjet core/controller/utils and the production demo.
+# Render build:
+# 1. Install workspace dependencies.
+# 2. Build the WASM rewriter.
+# 3. Build Scramjet core.
+# 4. Build controller, utils, and demo.
 
 pnpm install --frozen-lockfile
 
