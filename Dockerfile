@@ -1,9 +1,9 @@
 FROM node:24-bookworm
 
 ENV PNPM_HOME=/pnpm
-ENV PATH=$PNPM_HOME:$PATH
 ENV CARGO_HOME=/usr/local/cargo
 ENV RUSTUP_HOME=/usr/local/rustup
+ENV PATH=/usr/local/cargo/bin:/pnpm:$PATH
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -18,10 +18,12 @@ RUN apt-get update \
     && git config --global --add safe.directory /app
 
 WORKDIR /app
+
 COPY . .
 
 RUN chmod +x scripts/build-render.sh \
     && RELEASE=1 ./scripts/build-render.sh
 
 ENV NODE_ENV=production
+
 CMD ["node", "render-server.mjs"]
